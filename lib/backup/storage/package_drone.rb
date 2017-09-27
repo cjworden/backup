@@ -1,6 +1,5 @@
 require 'net/http'
 require 'uri'
-require 'pp'
 
 module Backup
   module Storage
