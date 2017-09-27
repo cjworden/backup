@@ -1,0 +1,10 @@
+  ##
+  # Package Drone [Storage]
+  #
+  store_with PackageDrone do |pd|
+    pd.base_uri         = 'http://package-drone-uri.com'
+    pd.channel_id       = 'channel-id'
+    pd.deploy_key       = 'your-deploy-key'
+    pd.username         = 'deploy' # You probably don't want to change this, as of now this is a hardcoded value inside Package Drone
+    pd.meta_data        = 'test:foo=bar&test:foobar=baz'
+  end
