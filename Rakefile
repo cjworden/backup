@@ -1,3 +1,10 @@
+require "rake/clean"
+
+CLEAN.include("tmp")
+CLOBBER.include("tmp")
+
+Dir["integration/tasks/**/*.rake"].each { |f| import f }
+
 require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
@@ -79,4 +86,36 @@ task :release do
   puts `gem push backup-#{new_version}.gem`
 
   puts "Backup version #{new_version} released!"
+end
+
+namespace :docker do
+  task :build do
+    sh "docker-compose build"
+  end
+  desc "Prepare the bundle on the Docker machine"
+  task prepare: ["docker:build"] do
+    run_in_docker_container "bin/docker_test prepare"
+  end
+  desc "Remove Docker containers and images for Backup"
+  task :clobber do
+    images = `docker images | grep 'backup/test-suite' | awk '{ print $3 }'`
+      .tr("\n", " ")
+    `docker rmi #{images}` unless images.empty?
+  end
+  desc "Run RSpec integration tests with Docker Compose"
+  task integration: ["docker:build", "integration:files"] do
+    run_in_docker_container "bin/docker_test integration"
+  end
+  desc "Start a container environment with an interactive shell"
+  task shell: ["docker:build"] do
+    run_in_docker_container "bin/docker_test console"
+  end
+  desc "Run RSpec unit tests with Docker Compose"
+  task spec: ["docker:build"] do
+    run_in_docker_container "bin/docker_test rspec"
+  end
+
+  def run_in_docker_container(command)
+    sh "docker-compose run --rm ruby_backup_tester #{command}"
+  end
 end
